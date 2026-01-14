@@ -29,10 +29,15 @@ class Query:
     api_type = None  # Query api url, Current know value  leftTicket/queryX | leftTicket/queryZ
 
     def __init__(self):
+        print("query init")
         self.session = Request()
+        print("query Request")
         self.request_device_id()
+        print("request_device_id")
         self.cluster = Cluster()
+        print("Cluster")
         self.update_query_interval()
+        print("update_query_interval")
         self.update_query_jobs()
         self.get_query_api_type()
 
@@ -58,8 +63,10 @@ class Query:
 
     @classmethod
     def check_before_run(cls):
+        print("check_before_run")
         self = cls()
         self.init_jobs()
+        print("init_jobs done")
         self.is_ready = True
 
     def start(self):
@@ -121,15 +128,19 @@ class Query:
         return job
 
     def request_device_id(self, force_renew = False):
+        print("request_device_id enter")
         """
         获取加密后的浏览器特征 ID
         :return:
         """
         expire_time =  self.session.cookies.get('RAIL_EXPIRATION')
+        print("request_device_id expire_time:",expire_time)
+        return "fakedeviceId"
         if not force_renew and expire_time and int(expire_time) - time_int_ms() > 0:
             return
         if 'pjialin' not in API_GET_BROWSER_DEVICE_ID:
             return self.request_device_id2()
+        
         response = self.session.get(API_GET_BROWSER_DEVICE_ID)
         if response.status_code == 200:
             try:
@@ -151,6 +162,7 @@ class Query:
             except:
                 return self.request_device_id()
         else:
+            print("err response:",response)
             return self.request_device_id()
 
     def request_device_id2(self):
