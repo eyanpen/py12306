@@ -1,4 +1,3 @@
-import os
 from playwright.async_api import async_playwright
 from autoticket.login.login import login_12306, saveCookie
 async def input_station_direct(page, fromStationText, fromStation, station_name, station_code):
@@ -76,11 +75,13 @@ async def query_ticket(page):
             await set_12306_date(page,"2026-01-20")
             await click_query(page)
             trains = await get_all_train_numbers(page)
+            # await show_train_state(page, trains)
             for train in trains:
                 if train.startswith(("T", "K")):
                     print("以 T 或 K 开头", train)
-                    if await book_train(page,train):
-                        break;
+                    page = await book_train(page,train)
+                    if page:
+                        return page
                     else:
                         print("try other one.")
                 else:
@@ -89,6 +90,8 @@ async def query_ticket(page):
             # await input_value(page,"fromStationText","上海")
         except any as e:
             print(e)
+    
+    return None
 async def set_12306_date(page, target_date):
     """
     <div class="inp-w" style="z-index:1200">
@@ -149,14 +152,15 @@ async def click_query(page):
         # 1. 等待按钮进入 DOM 且可见
         btn = page.locator(query_btn_selector)
         await btn.wait_for(state="visible", timeout=5000)
-        
+        print("查询按钮可见")
         # 2. 滚动到按钮位置（防止被底部页脚遮挡）
         await btn.scroll_into_view_if_needed()
         
         # 3. 执行点击
         print("正在点击查询按钮...")
-        await btn.click()
-        
+        # force=True 会跳过 Playwright 的交互性检查（即不管有没有遮罩层遮挡，直接点）
+        await btn.click(force=True)
+        print("已强制点击查询按钮")        
         # 4. 关键：等待“加载中”遮罩层消失，或者等待表格出现
         # 12306 查询时通常会出现一个透明或半透明的 loading 提示
         # 我们等待车票列表容器加载出内容
@@ -185,6 +189,32 @@ async def get_all_train_numbers(page):
     print(f"共发现 {len(train_numbers)} 个车次: {train_numbers}")
     return train_numbers
 
+def get_xpath_for_orderable(train_number):
+    train_row_xpath = f"//tr[.//a[text()='{train_number}']]"
+    return f"{train_row_xpath}//a[text()='预订']"
+
+async def show_train_state(page, trains):
+    """
+    根据车次号预订车次
+    :param trains: 车次字符串，如 "G102","K11"
+    """
+    for  train_number in trains:
+        print(f"正在寻找车次: {train_number} ...")
+        book_button_xpath = get_xpath_for_orderable(train_number=train_number)
+
+        try:
+            btn = page.locator(book_button_xpath)
+            
+            if await btn.is_visible(timeout=100):
+                print(f"车次 {train_number} 可订")
+            else:
+                print(f"页面上车次 {train_number} 不可订")
+                
+        except Exception as e:
+            print(f"预订操作异常: {e}")
+        
+
+
 async def book_train(page, train_number):
     """
     根据车次号预订车次
@@ -192,10 +222,7 @@ async def book_train(page, train_number):
     """
     print(f"正在寻找车次: {train_number} ...")
     
-    # 1. 使用 XPath 定位包含该车次号的行，并找到该行内的“预订”按钮
-    # 逻辑：找到文本为 train_number 的元素，向上找 tr，再向下找按钮
-    train_row_xpath = f"//tr[contains(., '{train_number}')]"
-    book_button_xpath = f"{train_row_xpath}//a[text()='预订']"
+    book_button_xpath = get_xpath_for_orderable(train_number=train_number)
 
     try:
         # 2. 等待该行的预订按钮出现
@@ -204,24 +231,19 @@ async def book_train(page, train_number):
         
         if await btn.is_visible(timeout=100):
             # 检查按钮是否为“不可预订”状态（通常会有特殊的 class）
-            is_disabled = await btn.evaluate("node => node.classList.contains('btn-disabled')")
-            
-            if not is_disabled:
-                print(f"发现 {train_number} 有票，正在点击预订...")
-                await btn.click()
-                # 预订后会跳转到乘客选择页
-                await page.wait_for_url("**/confirmPassenger/initConfirm", timeout=10000)
-                print("成功进入订单确认页面")
-                return True
-            else:
-                print(f"车次 {train_number} 目前无票（按钮置灰）")
+            print(f"发现 {train_number} 有票，正在点击预订...")
+            await btn.click(force=True)
+            # 预订后会跳转到乘客选择页
+            await page.wait_for_url("**/confirmPassenger/**", timeout=10000)
+            print("成功进入订单确认页面")
+            return page
         else:
             print(f"页面上未找到车次 {train_number}")
             
     except Exception as e:
         print(f"预订操作异常: {e}")
     
-    return False
+    return None
 
 async def run_query():
     async with async_playwright() as p:
