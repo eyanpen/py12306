@@ -1,28 +1,5 @@
 # 🚂 py12306 购票助手
-分布式，多账号，多任务购票
-
-## Features
-- [x] 多日期查询余票
-- [x] 自动打码下单
-- [x] 用户状态恢复
-- [x] 电话语音通知
-- [x] 多账号、多任务、多线程支持
-- [x] 单个任务多站点查询 
-- [x] 分布式运行
-- [x] Docker 支持
-- [x] 动态修改配置文件
-- [x] 邮件通知
-- [x] Web 管理页面
-- [x] 微信消息通知
-- [ ] 代理池支持 ([pyproxy-async](https://github.com/pjialin/pyproxy-async))
-
-## 使用
-py12306 需要运行在 python 3.6 以上版本（其它版本暂未测试)
-
-**1. 安装依赖**
-```bash
-git clone https://github.com/pjialin/py12306
-
+source env.source
 pip install -r requirements.txt
 ```
 

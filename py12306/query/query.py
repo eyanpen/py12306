@@ -110,6 +110,7 @@ class Query:
         QueryLog.print_init_jobs(jobs=self.jobs)
 
     def init_jobs(self):
+        print("init jobs")
         for job in self.query_jobs:
             self.init_job(job)
         QueryLog.print_init_jobs(jobs=self.jobs)

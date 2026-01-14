@@ -137,9 +137,11 @@ class Config:
 
     def start(self):
         self.save_to_remote()
+        print("config start")
         create_thread_and_run(self, 'refresh_configs', wait=Const.IS_TEST)
 
     def refresh_configs(self, once=False):
+        print("refresh_configs, self.is_cluster_enabled()=", self.is_cluster_enabled())
         if not self.is_cluster_enabled(): return
         while True:
             remote_configs = self.get_remote_config()

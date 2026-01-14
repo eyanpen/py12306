@@ -12,18 +12,25 @@ from py12306.web.web import Web
 def main():
     load_argvs()
     CommonLog.print_welcome()
+    print("print_welcome")
     App.run()
     CommonLog.print_configs()
+    print("print_configs")
     App.did_start()
-
+    print("did_start")
     App.run_check()
+    print("run_check")
     Query.check_before_run()
-
+    print("check_before_run")
     ####### 运行任务
     Web.run()
+    print("Web.run")
     Cdn.run()
+    print("Cdn.run")
     User.run()
+    print("User.run")
     Query.run()
+    print("Query.run")
     if not Const.IS_TEST:
         while True:
             sleep(10000)

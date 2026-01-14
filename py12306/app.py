@@ -37,6 +37,7 @@ class App:
     def run(cls):
         self = cls()
         self.register_sign()
+        print("register_sign")
         self.start()
 
     def start(self):
