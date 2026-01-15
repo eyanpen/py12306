@@ -1,0 +1,80 @@
+<div id="right-toolbar-autoticket" class="collapsed">
+    <button class="toggle-btn" onclick="window.toggleToolbar()">
+        <span class="arrow">◀</span>
+        <span class="arrow">◀</span>
+        <span class="arrow">◀</span>
+        <span class="arrow">◀</span>
+    </button>
+    <h3>参数设置</h3>
+    
+    <div class="section">
+        <label class="section-title">出行日期</label>
+        <input type="date" id="travel-date" onchange="window.handleDateChange(this.value)">
+    </div>
+    <h3>设置乘客</h3>
+    <div id="user-list-autoticket">
+        <label class="user-item"><input type="checkbox" value="蒋金玉"> 蒋金玉</label>
+        <label class="user-item"><input type="checkbox" value="彭天佑"> 彭天佑</label>
+        <label class="user-item"><input type="checkbox" value="彭小清"> 彭小清</label>
+    </div>
+    <h3>设置乘客</h3>
+    <div id="user-list-autoticket">
+        <label class="user-item"><input type="checkbox" value="蒋金玉"> 蒋金玉</label>
+        <label class="user-item"><input type="checkbox" value="彭天佑"> 彭天佑</label>
+        <label class="user-item"><input type="checkbox" value="彭小清"> 彭小清</label>
+    </div>
+</div>
+
+<style>
+    #right-toolbar-autoticket {
+        position: fixed; right: 0; top: 50%; transform: translateY(-50%);
+        width: 180px; background: white; box-shadow: -5px 0 15px rgba(0,0,0,0.2);
+        border-radius: 15px 0 0 15px; transition: transform 0.4s ease;
+        z-index: 999999; padding: 15px; font-family: sans-serif;
+    }
+    #right-toolbar-autoticket.collapsed { transform: translate(100%, -50%); }
+    .toggle-btn {
+        position: absolute; left: -20px; top: 50%; transform: translateY(-50%);
+        width: 20px; height: 80px; background: #007AFF; color: white;
+        border: none; border-radius: 8px 0 0 8px; cursor: pointer;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+    }
+    .arrow { font-size: 10px; transition: transform 0.4s; }
+    .collapsed .arrow { transform: rotate(180deg); }
+    @keyframes breathe { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+    .collapsed .toggle-btn { animation: breathe 2s infinite; }
+    .user-item { display: block; padding: 5px; cursor: pointer; }
+</style>
+
+<script>
+    window.toggleToolbar = () => {
+        const el = document.getElementById('right-toolbar-autoticket');
+        if (el) el.classList.toggle('collapsed');
+    };
+// 日期变动触发
+    window.handleDateChange = async (dateValue) => {
+        console.log(`[JS] 日期变动: ${dateValue}`);
+        if (window.station_data_changed) {
+            await window.station_data_changed(dateValue);
+        }
+    };
+    const today = new Date().toISOString().split('T')[0];
+        document.getElementById('travel-date').value = today;
+    (function initToolbar() {
+        const inputs = document.querySelectorAll('#user-list-autoticket input');
+        inputs.forEach(input => {
+            input.addEventListener('change', async (e) => {
+                const name = e.target.value;
+                const isChecked = e.target.checked;
+                
+                // 打印浏览器日志
+                console.log(`[JS] 触发勾选: ${name} -> ${isChecked}`);
+
+                // 重要：调用 Python 暴露给浏览器的函数
+                if (window.pyPassengerChanged) {
+                    await window.pyPassengerChanged(name, isChecked);
+                }
+            });
+        });
+    })();
+</script>

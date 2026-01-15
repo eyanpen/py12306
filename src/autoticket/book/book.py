@@ -31,7 +31,8 @@ async def run_book():
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=False)
         page = await login_12306(browser=browser)
-        page = await query_ticket(page)
+        if page:
+            page = await query_ticket(page)
         if page:
             page = await select_passengers(page, ["蒋金玉", "彭天佑","彭小清"])
             # if page:
