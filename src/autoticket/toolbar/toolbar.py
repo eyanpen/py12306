@@ -4,7 +4,7 @@ import os
 from playwright.async_api import async_playwright
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 HTML_PATH = os.path.join(CURRENT_DIR, "toolbar.html")
-
+JS_FILE_PATH = os.path.join(CURRENT_DIR, "jscode.js")
 
 async def station_data_changed(date_str):
     print(f"📅 [日期变动] 收到新日期: {date_str}")
@@ -19,8 +19,7 @@ async def passenger_is_changed(name, is_checked):
     # 这里可以写你的业务逻辑，比如写入数据库或操作其他网页元素
     print("-" * 30)
 
-
-async def inject_local_toolbar(page):
+async def inject_ui(page):
 
     # 1. 读取本地 HTML 文件内容
     if not os.path.exists(HTML_PATH):
@@ -29,19 +28,26 @@ async def inject_local_toolbar(page):
 
     with open(HTML_PATH, 'r', encoding='utf-8') as f:
         toolbar_content = f.read()
+        with open(JS_FILE_PATH, 'r', encoding='utf-8') as jf:
+            js_logic = jf.read()
+        # 2. 注入到页面
+            # 使用 Range().createContextualFragment 是为了强制执行 HTML 字符串中的 <script> 标签
+            await page.evaluate(js_logic, toolbar_content)
+
+async def handle_navigated(frame,page):
+    # 只在主框架跳转时注入，忽略那些 iframe
+    if frame == page.main_frame:
+        print(f"主页面已跳转至: {frame.url}")
+        await inject_ui(page)
+async def inject_local_toolbar(page):
+    # 1. 只需要调用一次，函数会一直跟着这个 page 对象
     await page.expose_function("pyPassengerChanged", passenger_is_changed)
     await page.expose_function("station_data_changed", station_data_changed)
-    # 2. 注入到页面
-    # 使用 Range().createContextualFragment 是为了强制执行 HTML 字符串中的 <script> 标签
-    await page.evaluate(f"""(htmlContent) => {{
-        // 1. 检查是否已经注入过
-        if (document.getElementById('right-toolbar-autoticket')) {{
-            console.log("[Playwright] 工具栏已存在，跳过注入。");
-            return; 
-        }}
-        const fragment = document.createRange().createContextualFragment(htmlContent);
-        document.body.appendChild(fragment);
-    }}""", toolbar_content)
+    # 2. 监听跳转：每次页面加载完成，自动重新把 UI 贴上去
+    page.on("framenavigated", lambda frame: asyncio.create_task(handle_navigated(frame,page)))
+    # 初次加载
+    await inject_ui(page)
+
 
 async def main():
     async with async_playwright() as p:
@@ -51,7 +57,7 @@ async def main():
         # 监听浏览器控制台输出
         page.on("console", lambda msg: print(f"来自页面的日志: {msg.text}"))
         
-        await page.goto("https://www.baidu.com")
+        # await page.goto("https://www.baidu.com")
         
         # 注入本地的 toolbar.html
         await inject_local_toolbar(page)
