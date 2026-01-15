@@ -1,8 +1,9 @@
 import os
 from playwright.async_api import async_playwright
+from autoticket.data.config import AUTH_FILE
+
 import asyncio
 # 状态保存的文件路径
-AUTH_FILE = "auth_state.json"
 
 
 async def task_login(page):
