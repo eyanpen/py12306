@@ -16,6 +16,8 @@ class route:
         self.release_date=None
         #For example: G318, K511
         self.trainIds=[]
+        #本次出现的乘客
+        self.passengers=[]
         pass
     def __str__(self):
         return json.dumps(self.to_dict(), ensure_ascii=False, indent=4)

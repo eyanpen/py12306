@@ -58,38 +58,5 @@
 </style>
 
 <script>
-    // JavaScript 逻辑更新
-    window.toggleToolbar = () => {
-        const el = document.getElementById('right-toolbar-autoticket');
-        if (el) el.classList.toggle('collapsed-autoticket');
-    };
-
-    window.handleDateChange = async (dateValue) => {
-        console.log(`[JS] 日期变动: ${dateValue}`);
-        if (window.station_data_changed) {
-            await window.station_data_changed(dateValue);
-        }
-    };
-
-    // 初始化日期
-    const today_autoticket = new Date().toISOString().split('T')[0];
-    const dateInput = document.getElementById('travel-date-autoticket');
-    if (dateInput) dateInput.value = today_autoticket;
-
-    (function initToolbarAutoticket() {
-        // 使用更具体的 ID 选择器防止冲突
-        const inputs = document.querySelectorAll('#user-list-autoticket input');
-        inputs.forEach(input => {
-            input.addEventListener('change', async (e) => {
-                const name = e.target.value;
-                const isChecked = e.target.checked;
-                
-                console.log(`[JS] 触发勾选: ${name} -> ${isChecked}`);
-
-                if (window.pyPassengerChanged) {
-                    await window.pyPassengerChanged(name, isChecked);
-                }
-            });
-        });
-    })();
+   
 </script>

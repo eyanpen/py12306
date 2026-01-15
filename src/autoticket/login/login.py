@@ -1,6 +1,6 @@
 import os
 from playwright.async_api import async_playwright
-from autoticket.data.config import AUTH_FILE
+from autoticket.data.config import config
 
 import asyncio
 # 状态保存的文件路径
@@ -44,16 +44,16 @@ async def smart_wait(page):
 async def login_12306(browser):
     
     # 1. 检查是否存在已保存的状态文件
-    if os.path.exists(AUTH_FILE):
+    if os.path.exists(config.AUTH_FILE):
         print("检测到已存在的 Cookie，尝试免登录...")
         # 创建带有状态的上下文
-        context = await browser.new_context(storage_state=AUTH_FILE)
+        context = await browser.new_context(storage_state=config.AUTH_FILE)
     else:
         print("未发现状态文件，请手动扫码登录...")
         context = await browser.new_context()
 
     page = await context.new_page()
-    await page.goto("https://kyfw.12306.cn/otn/view/index.html")
+    await page.goto(config.INDEX_HTML)
 
     page=await smart_wait(page)
     while True: # 总超时 10 秒
@@ -68,8 +68,8 @@ async def login_12306(browser):
             print("检测到已在首页，跳过登录按钮等待")
             break
         await page.wait_for_timeout(500)
-    await context.storage_state(path=AUTH_FILE)
-    print(f"新的登录状态已保存至: {AUTH_FILE}")
+    await context.storage_state(path=config.AUTH_FILE)
+    print(f"新的登录状态已保存至: {config.AUTH_FILE}")
 
 
     # 4. 继续你的业务逻辑（如下单、查票）
@@ -77,8 +77,8 @@ async def login_12306(browser):
     
     return page
 async def saveCookie(context):
-    await context.storage_state(path=AUTH_FILE)
-    print(f"新的登录状态已保存至: {AUTH_FILE}")
+    await context.storage_state(path=config.AUTH_FILE)
+    print(f"新的登录状态已保存至: {config.AUTH_FILE}")
 async def run_12306():
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=False)

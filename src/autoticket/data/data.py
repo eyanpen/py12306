@@ -1,12 +1,12 @@
 import json
 import os
 from autoticket.data.route import route
-from autoticket.data.config import DATA_FILE
+from autoticket.data.config import config
 
 class sys_data:
     def __init__(self):
         self.routes = []      # 存放 route 对象列表
-        self.passengers = []  # 存放乘客信息
+        self.passengers = []  # 存放所有乘客信息
     
     def to_dict(self):
         """递归地将对象及其属性转换为字典"""
@@ -24,7 +24,7 @@ class sys_data:
     def __str__(self):
         return json.dumps(self.to_dict(), ensure_ascii=False, indent=4)
 
-    def saveToFile(self, filename=DATA_FILE):
+    def saveToFile(self, filename=config.DATA_FILE):
         """将当前数据保存为 JSON 文件"""
         try:
             parent_dir = os.path.dirname(filename)
@@ -38,7 +38,7 @@ class sys_data:
         except Exception as e:
             print(f"保存文件失败: {e}")
 
-    def loadFromFile(filename=DATA_FILE):
+    def loadFromFile(filename=config.DATA_FILE):
         """从 JSON 文件加载数据并还原为对象结构"""
         sysdata = sys_data()
         if not os.path.exists(filename):
@@ -64,3 +64,4 @@ class sys_data:
         return sysdata
 
          
+sysdata = sys_data.loadFromFile()

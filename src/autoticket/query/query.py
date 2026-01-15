@@ -1,5 +1,7 @@
 from playwright.async_api import async_playwright
 from autoticket.login.login import login_12306, saveCookie
+from autoticket.data.config import config,selectors
+
 async def input_station_direct(page, fromStationText, fromStation, station_name, station_code):
     """
     直接通过 JS 设置值，跳过 UI 模拟
@@ -65,7 +67,12 @@ async def input_value_simple(page, id, value):
     
     # 2. 清空并输入城市名
     await from_input.fill(value) # 确保清空
+async def goto_query_page(page):
+    if not page.url.startswith(config.INDEX_HTML):
+        print("跳转",page.url, "到", config.INDEX_HTML)
+        await page.goto(config.INDEX_HTML)
 async def query_ticket(page):
+    await goto_query_page(page)
     querybtn =await page.wait_for_selector("text=车票预订", timeout=0)
     if querybtn:
         try:
@@ -142,15 +149,12 @@ async def set_12306_date(page, target_date):
 async def click_query(page):
     """
     点击查询按钮并等待列表刷新
-    <div class="btn-area"><a style="margin-top: 12px;" href="javascript:" id="query_ticket" class="btn92s" shape="rect">查询</a>
-</div>
     """
     # 精确选择器：带有 ID 的 a 标签
-    query_btn_selector = "a#query_ticket"
-    
+   
     try:
         # 1. 等待按钮进入 DOM 且可见
-        btn = page.locator(query_btn_selector)
+        btn = page.locator(selectors.query_btn_selector)
         await btn.wait_for(state="visible", timeout=5000)
         print("查询按钮可见")
         # 2. 滚动到按钮位置（防止被底部页脚遮挡）

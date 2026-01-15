@@ -1,5 +1,6 @@
 from autoticket.data.route import route
 from autoticket.data.data import sys_data
+from autoticket.data.config import selectors
 
 
 if __name__ == "__main__":
@@ -18,7 +19,12 @@ if __name__ == "__main__":
     mydata = sys_data()
     mydata.routes.append(my_route)
     print(mydata)
-    mydata.saveToFile()
+    # mydata.saveToFile()
 
     loadData=sys_data.loadFromFile()
     print(loadData)
+
+    print(selectors.query_btn_selector)
+    selectors.query_btn_selector="d"
+    print(selectors.query_btn_selector)
+
